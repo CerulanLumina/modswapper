@@ -1,13 +1,13 @@
 use std::collections::HashMap;
+use std::sync::{Arc, Mutex, RwLock};
 
 use uuid::Uuid;
 
 pub(super) struct MainWindowViewModel {
     pub filter: Filter,
-    #[cfg(feature = "ui-add-edit")]
-    pub new_swap_set_window: NewSwapSetWindow,
-    #[cfg(feature = "ui-add-edit")]
-    pub new_profile_window: NewProfileWindow,
+    pub new_swap_set_window: Arc<RwLock<NewSwapSetWindow>>,
+    // #[cfg(feature = "ui-add-edit")]
+    // pub new_profile_window: NewProfileWindow,
     pub swap_set_list: SwapSetListViewModel,
 }
 
@@ -15,8 +15,20 @@ pub(super) struct Filter {
     pub filter: String,
 }
 
-#[cfg(feature = "ui-add-edit")]
 pub(super) struct NewSwapSetWindow {
+    pub inner: Arc<Mutex<NewSwapSetWindowState>>,
+    pub open: bool,
+}
+
+impl NewSwapSetWindow {
+    pub fn reset(&mut self) {
+        let mut v = self.inner.lock().unwrap();
+        v.label = String::new();
+        v.source_directories = vec![String::new()];
+    }
+}
+
+pub(super) struct NewSwapSetWindowState {
     pub label: String,
     pub source_directories: Vec<String>,
 }

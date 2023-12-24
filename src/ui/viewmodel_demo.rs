@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use std::iter;
 use std::ops::RangeInclusive;
+use std::sync::{Arc, Mutex, RwLock};
 
 use camino::{Utf8Path, Utf8PathBuf};
 use inflector::cases::titlecase::to_title_case;
@@ -39,16 +40,18 @@ pub fn generate_view_model() -> MainWindowViewModel {
         filter: Filter {
             filter: "".to_owned(),
         },
-        #[cfg(feature = "ui-add-edit")]
-        new_swap_set_window: NewSwapSetWindow {
-            label: "".to_owned(),
-            source_directories: vec![],
-        },
-        #[cfg(feature = "ui-add-edit")]
-        new_profile_window: NewProfileWindow {
-            label: "".to_owned(),
-            target_directories: vec![],
-        },
+        new_swap_set_window: Arc::new(RwLock::new(NewSwapSetWindow {
+            inner: Arc::new(Mutex::new(NewSwapSetWindowState {
+                label: "".to_string(),
+                source_directories: vec![],
+            })),
+            open: false,
+        })),
+        // #[cfg(feature = "ui-add-edit")]
+        // new_profile_window: NewProfileWindow {
+        //     label: "".to_owned(),
+        //     target_directories: vec![],
+        // },
         swap_set_list: SwapSetListViewModel {
             inner: HashMap::from_iter(
                 iter::from_fn(generate_swap_set)
