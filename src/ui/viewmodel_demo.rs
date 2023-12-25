@@ -3,6 +3,7 @@ use std::iter;
 use std::ops::RangeInclusive;
 use std::sync::{Arc, Mutex, RwLock};
 
+use crate::ui::rfd_worker::RFDInvoker;
 use camino::{Utf8Path, Utf8PathBuf};
 use inflector::cases::titlecase::to_title_case;
 use names::Name;
@@ -41,9 +42,11 @@ pub fn generate_view_model() -> MainWindowViewModel {
             filter: "".to_owned(),
         },
         new_swap_set_window: Arc::new(RwLock::new(NewSwapSetWindow {
+            rfd: RFDInvoker::new(),
             inner: Arc::new(Mutex::new(NewSwapSetWindowState {
                 label: "".to_string(),
                 source_directories: vec![],
+                file_dialog_index: None,
             })),
             open: false,
         })),
