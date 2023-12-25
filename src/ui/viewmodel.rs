@@ -62,4 +62,6 @@ pub(super) struct ProfileViewModel {
     pub label: String,
     pub uuid: Uuid,
     pub target_directories: Vec<String>,
+    // pub rfd: RFDInvoker,
+    // pub selected_file_index: Option<usize>,
 }

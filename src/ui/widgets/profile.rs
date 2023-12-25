@@ -3,7 +3,7 @@ use uuid::Uuid;
 
 use crate::ui::viewmodel::{ProfileListViewModel, ProfileViewModel};
 
-struct ProfileTable<'a> {
+pub struct ProfileTable<'a> {
     label: &'a mut String,
     uuid: &'a Uuid,
     source_directories: Option<&'a [String]>,
@@ -51,6 +51,7 @@ impl<'a> ProfileTable<'a> {
             .id_source(self.uuid)
             .default_open(self.open.unwrap_or(false))
             .show(ui, |ui| {
+                // TODO: Use multifilelist
                 Grid::new(self.uuid).num_columns(2).show(ui, |grid| {
                     for (source, target) in
                         source_directories.iter().zip(target_directories.iter_mut())

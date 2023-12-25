@@ -1,10 +1,12 @@
+use std::ops::DerefMut;
 use std::sync::{Arc, RwLock};
 
 use eframe::egui::{
-    Align, CentralPanel, Context, Layout, ScrollArea, TextEdit, TextStyle, ViewportCommand,
+    CentralPanel, Context, ScrollArea, TextEdit, ViewportCommand,
 };
 
-use crate::ui::viewmodel::NewSwapSetWindow;
+use crate::ui::viewmodel::{NewSwapSetWindow, NewSwapSetWindowState};
+use crate::ui::widgets::MultiFileList;
 
 pub fn new_swap_set_window(
     state: Arc<RwLock<NewSwapSetWindow>>,
@@ -17,7 +19,8 @@ pub fn new_swap_set_window(
         });
         let inner_arc = { state.read().unwrap().inner.clone() };
         let rfd = { state.read().unwrap().rfd.clone() };
-        let mut inner = inner_arc.lock().unwrap();
+        let mut inner_guard = inner_arc.lock().unwrap();
+        let inner = &mut *inner_guard;
 
         if let Some(idx) = inner.file_dialog_index {
             if let Some(path_opt) = rfd.latest_file_picked() {
@@ -48,32 +51,8 @@ pub fn new_swap_set_window(
                             inner.source_directories.push(String::new());
                         }
                     });
-                    {
-                        let mut clicked_idx = None;
-                        for (idx, source) in &mut inner.source_directories.iter_mut().enumerate() {
-                            let res = ui
-                                .horizontal(|ui| {
-                                    ui.with_layout(Layout::right_to_left(Align::Center), |ui| {
-                                        let res = ui.button("Browse...");
-                                        ui.centered_and_justified(|ui| {
-                                            TextEdit::singleline(source)
-                                                .font(TextStyle::Monospace)
-                                                .show(ui);
-                                        });
-                                        res
-                                    })
-                                    .inner
-                                })
-                                .inner;
-                            if res.clicked() {
-                                clicked_idx = Some(idx);
-                            }
-                        }
-                        if inner.file_dialog_index.is_none() && clicked_idx.is_some() {
-                            rfd.open_file_dialog();
-                            inner.file_dialog_index = clicked_idx;
-                        }
-                    }
+                    MultiFileList::new(&mut inner.source_directories, &mut inner.file_dialog_index, &rfd)
+                        .show(ui);
                     ui.separator();
                     ui.vertical_centered_justified(|ui| {
                         if ui.button("Create").clicked() {
