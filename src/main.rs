@@ -6,6 +6,7 @@ use std::error::Error;
 mod fuzzy;
 #[cfg(feature = "backend")]
 mod model;
+mod rfd_service;
 mod ui;
 
 fn main() -> Result<(), Box<dyn Error>> {

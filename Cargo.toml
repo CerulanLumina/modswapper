@@ -15,6 +15,7 @@ crossbeam = "0.8"
 directories = "5"
 eframe = "0.25"
 either = "1"
+futures = { version = "0.3.30", features = ["futures-executor"] }
 fuzzy-matcher = { version = "0.3", optional = true }
 itoa = "1"
 junction = "1.0.0"
@@ -24,3 +25,4 @@ rand = { version = "0.8", optional = true }
 rfd = { version = "0.12", default-features = false, features = ["xdg-portal"] }
 thiserror = "1"
 uuid = { version = "1", features = ["v4"] }
+velect = { git = "https://github.com/CerulanLumina/velect.git" }

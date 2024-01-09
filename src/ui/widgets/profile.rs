@@ -1,7 +1,8 @@
-use eframe::egui::{Align, CollapsingHeader, Grid, Layout, Response, TextEdit, TextStyle, Ui};
+use eframe::egui::{Align, CollapsingHeader, Layout, Response, Ui};
 use uuid::Uuid;
 
 use crate::ui::viewmodel::{ProfileListViewModel, ProfileViewModel};
+use crate::ui::widgets::MultiFileList;
 
 pub struct ProfileTable<'a> {
     label: &'a mut String,
@@ -44,25 +45,29 @@ impl<'a> ProfileTable<'a> {
         let target_directories = self
             .target_directories
             .expect("Did not initialize target_directories for ProfileTable");
-        let source_directories = self
+        let _source_directories = self
             .source_directories
             .expect("Did not initialize source_directories for ProfileTable");
         CollapsingHeader::new(self.label.as_str())
             .id_source(self.uuid)
             .default_open(self.open.unwrap_or(false))
             .show(ui, |ui| {
+                // MultiFileList::
                 // TODO: Use multifilelist
-                Grid::new(self.uuid).num_columns(2).show(ui, |grid| {
-                    for (source, target) in
-                        source_directories.iter().zip(target_directories.iter_mut())
-                    {
-                        grid.code(source);
-                        TextEdit::singleline(target)
-                            .font(TextStyle::Monospace)
-                            .show(grid);
-                        grid.end_row();
-                    }
-                })
+                MultiFileList::new(target_directories, *self.uuid)
+                    // .show_with_additional() // TODO
+                    .show(ui);
+                // Grid::new(self.uuid).num_columns(2).show(ui, |grid| {
+                //     for (source, target) in
+                //         source_directories.iter().zip(target_directories.iter_mut())
+                //     {
+                //         grid.code(source);
+                //         TextEdit::singleline(target)
+                //             .font(TextStyle::Monospace)
+                //             .show(grid);
+                //         grid.end_row();
+                //     }
+                // })
             })
             .header_response
             .context_menu(|ui| {

@@ -3,7 +3,6 @@ use std::iter;
 use std::ops::RangeInclusive;
 use std::sync::{Arc, Mutex, RwLock};
 
-use crate::ui::rfd_worker::RFDInvoker;
 use camino::{Utf8Path, Utf8PathBuf};
 use inflector::cases::titlecase::to_title_case;
 use names::Name;
@@ -15,7 +14,6 @@ use crate::ui::viewmodel::*;
 
 const SWAP_SET_COUNT: RangeInclusive<usize> = 30..=50;
 const PROFILE_COUNT: RangeInclusive<usize> = 2..=4;
-
 const SOURCE_DIRECTORY_COUNT: RangeInclusive<usize> = 2..=4;
 
 static PROJECT_DIRS: Lazy<Utf8PathBuf> = Lazy::new(|| {
@@ -42,11 +40,10 @@ pub fn generate_view_model() -> MainWindowViewModel {
             filter: "".to_owned(),
         },
         new_swap_set_window: Arc::new(RwLock::new(NewSwapSetWindow {
-            rfd: RFDInvoker::new(),
             inner: Arc::new(Mutex::new(NewSwapSetWindowState {
                 label: "".to_string(),
-                source_directories: vec![],
-                file_dialog_index: None,
+                source_directories: Vec::new(),
+                uuid: Uuid::new_v4(),
             })),
             open: false,
         })),

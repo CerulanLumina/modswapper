@@ -1,27 +1,25 @@
-use eframe::egui::{Align, Direction, Layout, TextEdit, TextStyle, Ui};
-use crate::ui::rfd_worker::RFDInvoker;
+use crate::rfd_service::RFD_INVOKER;
+use eframe::egui::{Align, Layout, TextEdit, TextStyle, Ui};
+use uuid::Uuid;
 
 pub struct MultiFileList<'a> {
-    file_list: &'a mut Vec<String>,
-    selecting_file_index: &'a mut Option<usize>,
-    rfd_invoker: &'a RFDInvoker,
+    id_source: Uuid,
+    file_list: &'a mut [String],
 }
 
 impl<'a> MultiFileList<'a> {
-
-    pub fn new(file_list: &'a mut Vec<String>, selecting_file_index: &'a mut Option<usize>, rfd_invoker: &'a RFDInvoker) -> Self {
+    pub fn new(file_list: &'a mut [String], id_source: Uuid) -> Self {
         Self {
+            id_source,
             file_list,
-            selecting_file_index,
-            rfd_invoker,
         }
     }
 
     fn show_maybe_additional(self, ui: &mut Ui, opts: Option<(Align, impl FnMut(usize, &mut Ui))>) {
-        let mut clicked_idx = None;
-        let (align, mut add_contents) = opts.map(|a| (Some(a.0), Some(a.1))).unwrap_or((None, None));
+        let (align, mut add_contents) =
+            opts.map(|a| (Some(a.0), Some(a.1))).unwrap_or((None, None));
 
-        for (idx, source) in &mut self.file_list.iter_mut().enumerate() {
+        for (idx, source) in self.file_list.iter_mut().enumerate() {
             let res = ui
                 .horizontal(|ui| {
                     ui.with_layout(Layout::right_to_left(Align::Center), |ui| {
@@ -34,26 +32,32 @@ impl<'a> MultiFileList<'a> {
                                 .font(TextStyle::Monospace)
                                 .show(ui);
                         });
-                        if let Some(Align::Min) = align {
+                        if let Some(Align::Max) = align {
                             add_contents.as_mut().unwrap()(idx, ui);
                         }
 
                         res
                     })
-                        .inner
+                    .inner
                 })
                 .inner;
             if res.clicked() {
-                clicked_idx = Some(idx);
+                RFD_INVOKER.open_dialog(self.id_source, idx);
             }
         }
-        if self.selecting_file_index.is_none() && clicked_idx.is_some() {
-            self.rfd_invoker.open_file_dialog();
-            *self.selecting_file_index = clicked_idx;
+        if let Some((path, idx)) = RFD_INVOKER.poll(&self.id_source) {
+            if let Some(s) = self.file_list.get_mut(idx) {
+                *s = path;
+            }
         }
     }
 
-    pub fn show_with_additional(self, ui: &mut Ui, direction: Align, add_contents_each: impl FnMut(usize, &mut Ui)) {
+    pub fn show_with_additional(
+        self,
+        ui: &mut Ui,
+        direction: Align,
+        add_contents_each: impl FnMut(usize, &mut Ui),
+    ) {
         self.show_maybe_additional(ui, Some((direction, add_contents_each)));
     }
 

@@ -1,7 +1,6 @@
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex, RwLock};
 
-use crate::ui::rfd_worker::RFDInvoker;
 use uuid::Uuid;
 
 pub(super) struct MainWindowViewModel {
@@ -19,21 +18,23 @@ pub(super) struct Filter {
 pub(super) struct NewSwapSetWindow {
     pub inner: Arc<Mutex<NewSwapSetWindowState>>,
     pub open: bool,
-    pub rfd: RFDInvoker,
 }
 
 impl NewSwapSetWindow {
     pub fn reset(&mut self) {
         let mut v = self.inner.lock().unwrap();
-        v.label = String::new();
-        v.source_directories = vec![String::new()];
+        *v = NewSwapSetWindowState {
+            label: String::new(),
+            source_directories: vec![String::new()],
+            uuid: Uuid::new_v4(),
+        };
     }
 }
 
 pub(super) struct NewSwapSetWindowState {
     pub label: String,
     pub source_directories: Vec<String>,
-    pub file_dialog_index: Option<usize>,
+    pub uuid: Uuid,
 }
 
 #[cfg(feature = "ui-add-edit")]
@@ -62,6 +63,4 @@ pub(super) struct ProfileViewModel {
     pub label: String,
     pub uuid: Uuid,
     pub target_directories: Vec<String>,
-    // pub rfd: RFDInvoker,
-    // pub selected_file_index: Option<usize>,
 }

@@ -1,13 +1,11 @@
 use eframe::egui::{CentralPanel, Context, ScrollArea, ViewportBuilder, ViewportId};
 use eframe::{App, AppCreator, Frame};
 
-mod viewmodel;
-mod widgets;
-
 mod filterlogic;
-mod rfd_worker;
+mod viewmodel;
 #[cfg(feature = "devdemo")]
 mod viewmodel_demo;
+mod widgets;
 mod windows;
 
 pub fn app() -> AppCreator {
