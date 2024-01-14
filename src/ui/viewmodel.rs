@@ -33,7 +33,7 @@ impl NewSwapSetWindow {
 
 pub(super) struct NewSwapSetWindowState {
     pub label: String,
-    pub source_directories: Vec<String>,
+    pub source_directories: Vec<SourceDirectory>,
     pub uuid: Uuid,
 }
 
@@ -52,7 +52,7 @@ pub(super) struct SwapSetViewModel {
     pub label: String,
     pub uuid: Uuid,
     pub current_profile: Option<Uuid>,
-    pub source_directories: Vec<String>,
+    pub source_directories: Vec<SourceDirectory>,
 }
 
 pub(super) struct ProfileListViewModel {
@@ -63,4 +63,10 @@ pub(super) struct ProfileViewModel {
     pub label: String,
     pub uuid: Uuid,
     pub target_directories: Vec<String>,
+}
+
+#[derive(Default)]
+pub(super) struct SourceDirectory {
+    pub label: String,
+    pub path: String,
 }

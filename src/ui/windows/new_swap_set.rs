@@ -35,10 +35,14 @@ pub fn new_swap_set_window(
                         ui.label("Source Directories");
                         ui.separator();
                         if ui.button("Add Source Directory...").clicked() {
-                            inner.source_directories.push(String::new());
+                            inner.source_directories.push(Default::default());
                         }
                     });
-                    MultiFileList::new(inner.source_directories.iter_mut(), inner.uuid).show(ui);
+                    MultiFileList::new(
+                        inner.source_directories.iter_mut().map(|a| &mut a.path),
+                        inner.uuid,
+                    )
+                    .show(ui);
                     ui.separator();
                     ui.vertical_centered_justified(|ui| {
                         if ui.button("Create").clicked() {

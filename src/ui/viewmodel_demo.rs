@@ -5,6 +5,7 @@ use std::sync::{Arc, Mutex, RwLock};
 
 use camino::{Utf8Path, Utf8PathBuf};
 use inflector::cases::titlecase::to_title_case;
+use itertools::Itertools;
 use names::Name;
 use once_cell::sync::Lazy;
 use rand::Rng;
@@ -65,15 +66,22 @@ pub fn generate_view_model() -> MainWindowViewModel {
 fn generate_swap_set() -> Option<SwapSetViewModel> {
     let mut names = names::Generator::with_naming(Name::Plain);
     let label = to_title_case(names.next().unwrap().as_str());
-    let source_dirs: Vec<String> = names
-        .take(rand::thread_rng().gen_range(SOURCE_DIRECTORY_COUNT))
-        .map(|a| GLOBAL_DIRS.join(label.as_str()).join(a).into_string())
+    let source_dirs: Vec<SourceDirectory> = names
+        .take(rand::thread_rng().gen_range(SOURCE_DIRECTORY_COUNT) * 2)
+        .tuples::<(_, _)>()
+        .map(|(src_label, path)| {
+            (
+                inflector::cases::sentencecase::to_sentence_case(&src_label),
+                GLOBAL_DIRS.join(label.as_str()).join(path).into_string(),
+            )
+        })
+        .map(|(label, path)| SourceDirectory { label, path })
         .collect();
     let names = names::Generator::with_naming(Name::Plain);
     let profiles = HashMap::from_iter(
         names
             .take(rand::thread_rng().gen_range(PROFILE_COUNT))
-            .map(|name| generate_profile(name, source_dirs.as_slice()))
+            .map(|name| generate_profile(name, source_dirs.iter().map(|a| &a.path)))
             .map(|pvm| (pvm.uuid, pvm)),
     );
 
@@ -86,13 +94,15 @@ fn generate_swap_set() -> Option<SwapSetViewModel> {
     })
 }
 
-fn generate_profile(slug: String, source_dirs: &[String]) -> ProfileViewModel {
+fn generate_profile<'a>(
+    slug: String,
+    source_dirs: impl Iterator<Item = &'a String>,
+) -> ProfileViewModel {
     ProfileViewModel {
         label: to_title_case(&slug),
         uuid: Uuid::new_v4(),
         target_directories: Vec::from_iter(
             source_dirs
-                .iter()
                 .map(Utf8Path::new)
                 .flat_map(Utf8Path::file_name)
                 .map(|source_name| {

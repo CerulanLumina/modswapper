@@ -1,5 +1,8 @@
 use crate::rfd_service::RFD_INVOKER;
-use eframe::egui::{Align, Layout, TextEdit, TextStyle, Ui};
+use eframe::egui::scroll_area::ScrollBarVisibility;
+use eframe::egui::{
+    Align, Grid, Label, Layout, RichText, ScrollArea, Sense, Ui, Widget, WidgetText,
+};
 use uuid::Uuid;
 
 pub struct MultiFileList<'a, I>
@@ -22,35 +25,41 @@ impl<'a, I: Iterator<Item = &'a mut String>> MultiFileList<'a, I> {
         let (align, mut add_contents) =
             opts.map(|a| (Some(a.0), Some(a.1))).unwrap_or((None, None));
         let mut changed = RFD_INVOKER.poll(&self.id_source);
-        for (idx, source) in self.file_list.enumerate() {
-            if let Some((path, _)) = maybe_extract(&mut changed, idx) {
-                *source = path;
-            }
-            let res = ui
-                .horizontal(|ui| {
+        Grid::new(self.id_source)
+            .num_columns(if align.is_some() { 2 } else { 1 })
+            .show(ui, |ui| {
+                for (idx, source) in self.file_list.enumerate() {
+                    if let Some((path, _)) = maybe_extract(&mut changed, idx) {
+                        *source = path;
+                    }
+                    if let Some(Align::Min) = align {
+                        add_contents.as_mut().unwrap()(idx, ui);
+                    }
                     ui.with_layout(Layout::right_to_left(Align::Center), |ui| {
-                        if let Some(Align::Min) = align {
-                            add_contents.as_mut().unwrap()(idx, ui);
+                        if ui.button("Browse...").clicked() {
+                            RFD_INVOKER.open_dialog(self.id_source, idx);
                         }
-                        let res = ui.button("Browse...");
-                        ui.centered_and_justified(|ui| {
-                            TextEdit::singleline(source)
-                                .font(TextStyle::Monospace)
-                                .show(ui);
-                        });
-                        if let Some(Align::Max) = align {
-                            add_contents.as_mut().unwrap()(idx, ui);
-                        }
+                        ScrollArea::horizontal()
+                            .id_source((self.id_source, idx))
+                            .enable_scrolling(false)
+                            .scroll_bar_visibility(ScrollBarVisibility::AlwaysHidden)
+                            .show(ui, |ui| {
+                                Label::new(WidgetText::RichText(
+                                    RichText::new(source.to_owned())
+                                        .monospace()
+                                        .background_color(ui.style().visuals.extreme_bg_color),
+                                ))
+                                .sense(Sense::hover())
+                                .ui(ui)
+                                .on_hover_ui(|ui| {
+                                    ui.label(source.to_owned());
+                                });
+                            });
+                    });
 
-                        res
-                    })
-                    .inner
-                })
-                .inner;
-            if res.clicked() {
-                RFD_INVOKER.open_dialog(self.id_source, idx);
-            }
-        }
+                    ui.end_row();
+                }
+            });
     }
 
     pub fn show_with_additional(

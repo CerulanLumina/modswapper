@@ -1,13 +1,13 @@
-use eframe::egui::{Align, CollapsingHeader, Layout, Response, Ui};
+use eframe::egui::{Align, CollapsingHeader, Label, Layout, Response, Sense, Ui, Widget};
 use uuid::Uuid;
 
-use crate::ui::viewmodel::{ProfileListViewModel, ProfileViewModel};
+use crate::ui::viewmodel::{ProfileListViewModel, ProfileViewModel, SourceDirectory};
 use crate::ui::widgets::MultiFileList;
 
 pub struct ProfileTable<'a> {
     label: &'a mut String,
     uuid: &'a Uuid,
-    source_directories: Option<&'a [String]>,
+    source_directories: Option<&'a [SourceDirectory]>,
     target_directories: Option<&'a mut [String]>,
     open: Option<bool>,
 }
@@ -23,7 +23,7 @@ impl<'a> ProfileTable<'a> {
         }
     }
 
-    pub fn with_source_directories(self, source_directories: &'a [String]) -> Self {
+    pub fn with_source_directories(self, source_directories: &'a [SourceDirectory]) -> Self {
         Self {
             source_directories: Some(source_directories),
             ..self
@@ -45,7 +45,7 @@ impl<'a> ProfileTable<'a> {
         let target_directories = self
             .target_directories
             .expect("Did not initialize target_directories for ProfileTable");
-        let _source_directories = self
+        let source_directories = self
             .source_directories
             .expect("Did not initialize source_directories for ProfileTable");
         CollapsingHeader::new(self.label.as_str())
@@ -54,9 +54,19 @@ impl<'a> ProfileTable<'a> {
             .show(ui, |ui| {
                 // MultiFileList::
                 // TODO: Use multifilelist
-                MultiFileList::new(target_directories.iter_mut(), *self.uuid)
-                    // .show_with_additional() // TODO
-                    .show(ui);
+                MultiFileList::new(target_directories.iter_mut(), *self.uuid).show_with_additional(
+                    ui,
+                    Align::Min,
+                    |idx, ui| {
+                        let src = &source_directories[idx];
+                        Label::new(&src.label)
+                            .sense(Sense::hover())
+                            .ui(ui)
+                            .on_hover_ui(|ui| {
+                                ui.label(&src.path);
+                            });
+                    },
+                );
                 // Grid::new(self.uuid).num_columns(2).show(ui, |grid| {
                 //     for (source, target) in
                 //         source_directories.iter().zip(target_directories.iter_mut())
@@ -79,7 +89,7 @@ impl<'a> ProfileTable<'a> {
 pub struct ProfileSelectorWidget<'a> {
     selected: Option<bool>,
     profile_view_model: &'a mut ProfileViewModel,
-    source_directories: Option<&'a [String]>,
+    source_directories: Option<&'a [SourceDirectory]>,
 }
 
 impl<'a> ProfileSelectorWidget<'a> {
@@ -98,7 +108,7 @@ impl<'a> ProfileSelectorWidget<'a> {
         }
     }
 
-    pub fn with_source_directories(self, source_directories: &'a [String]) -> Self {
+    pub fn with_source_directories(self, source_directories: &'a [SourceDirectory]) -> Self {
         Self {
             source_directories: Some(source_directories),
             ..self
@@ -132,7 +142,7 @@ impl<'a> ProfileSelectorWidget<'a> {
 pub struct ProfileListWidget<'a> {
     profile_list_view_model: &'a mut ProfileListViewModel,
     selected: Option<&'a Uuid>,
-    source_directories: Option<&'a [String]>,
+    source_directories: Option<&'a [SourceDirectory]>,
 }
 
 impl<'a> ProfileListWidget<'a> {
@@ -144,7 +154,7 @@ impl<'a> ProfileListWidget<'a> {
         }
     }
 
-    pub fn with_source_directories(self, source_directories: &'a [String]) -> Self {
+    pub fn with_source_directories(self, source_directories: &'a [SourceDirectory]) -> Self {
         Self {
             source_directories: Some(source_directories),
             ..self
