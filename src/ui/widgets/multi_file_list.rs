@@ -71,6 +71,7 @@ impl<'a, I: Iterator<Item = &'a mut String>> MultiFileList<'a, I> {
         self.show_maybe_additional(ui, Some((direction, add_contents_each)));
     }
 
+    #[allow(dead_code)]
     pub fn show(self, ui: &mut Ui) {
         self.show_maybe_additional(ui, None::<(_, fn(usize, &mut Ui))>);
     }

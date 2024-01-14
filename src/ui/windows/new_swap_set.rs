@@ -1,9 +1,8 @@
 use std::sync::{Arc, RwLock};
 
-use eframe::egui::{CentralPanel, Context, ScrollArea, TextEdit, ViewportCommand};
-
 use crate::ui::viewmodel::NewSwapSetWindow;
 use crate::ui::widgets::MultiFileList;
+use eframe::egui::{Align, CentralPanel, Context, ScrollArea, TextEdit, ViewportCommand, Widget};
 
 pub fn new_swap_set_window(
     state: Arc<RwLock<NewSwapSetWindow>>,
@@ -38,11 +37,24 @@ pub fn new_swap_set_window(
                             inner.source_directories.push(Default::default());
                         }
                     });
-                    MultiFileList::new(
-                        inner.source_directories.iter_mut().map(|a| &mut a.path),
-                        inner.uuid,
-                    )
-                    .show(ui);
+
+                    let (mut labels, paths): (Vec<_>, Vec<_>) = inner
+                        .source_directories
+                        .iter_mut()
+                        .map(|a| (&mut a.label, &mut a.path))
+                        .unzip();
+                    MultiFileList::new(paths.into_iter(), inner.uuid).show_with_additional(
+                        ui,
+                        Align::Min,
+                        |idx, ui| {
+                            ui.scope(|ui| {
+                                ui.set_min_width(120.0);
+                                TextEdit::singleline(labels[idx])
+                                    .hint_text("Directory label")
+                                    .ui(ui);
+                            });
+                        },
+                    );
                     ui.separator();
                     ui.vertical_centered_justified(|ui| {
                         if ui.button("Create").clicked() {
