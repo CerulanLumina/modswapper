@@ -54,7 +54,7 @@ impl<'a> ProfileTable<'a> {
             .show(ui, |ui| {
                 // MultiFileList::
                 // TODO: Use multifilelist
-                MultiFileList::new(target_directories, *self.uuid)
+                MultiFileList::new(target_directories.iter_mut(), *self.uuid)
                     // .show_with_additional() // TODO
                     .show(ui);
                 // Grid::new(self.uuid).num_columns(2).show(ui, |grid| {

@@ -38,8 +38,7 @@ pub fn new_swap_set_window(
                             inner.source_directories.push(String::new());
                         }
                     });
-                    MultiFileList::new(inner.source_directories.as_mut_slice(), inner.uuid)
-                        .show(ui);
+                    MultiFileList::new(inner.source_directories.iter_mut(), inner.uuid).show(ui);
                     ui.separator();
                     ui.vertical_centered_justified(|ui| {
                         if ui.button("Create").clicked() {

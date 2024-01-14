@@ -2,13 +2,16 @@ use crate::rfd_service::RFD_INVOKER;
 use eframe::egui::{Align, Layout, TextEdit, TextStyle, Ui};
 use uuid::Uuid;
 
-pub struct MultiFileList<'a> {
+pub struct MultiFileList<'a, I>
+where
+    I: Iterator<Item = &'a mut String>,
+{
     id_source: Uuid,
-    file_list: &'a mut [String],
+    file_list: I,
 }
 
-impl<'a> MultiFileList<'a> {
-    pub fn new(file_list: &'a mut [String], id_source: Uuid) -> Self {
+impl<'a, I: Iterator<Item = &'a mut String>> MultiFileList<'a, I> {
+    pub fn new(file_list: I, id_source: Uuid) -> Self {
         Self {
             id_source,
             file_list,
@@ -18,8 +21,11 @@ impl<'a> MultiFileList<'a> {
     fn show_maybe_additional(self, ui: &mut Ui, opts: Option<(Align, impl FnMut(usize, &mut Ui))>) {
         let (align, mut add_contents) =
             opts.map(|a| (Some(a.0), Some(a.1))).unwrap_or((None, None));
-
-        for (idx, source) in self.file_list.iter_mut().enumerate() {
+        let mut changed = RFD_INVOKER.poll(&self.id_source);
+        for (idx, source) in self.file_list.enumerate() {
+            if let Some((path, _)) = maybe_extract(&mut changed, idx) {
+                *source = path;
+            }
             let res = ui
                 .horizontal(|ui| {
                     ui.with_layout(Layout::right_to_left(Align::Center), |ui| {
@@ -45,11 +51,6 @@ impl<'a> MultiFileList<'a> {
                 RFD_INVOKER.open_dialog(self.id_source, idx);
             }
         }
-        if let Some((path, idx)) = RFD_INVOKER.poll(&self.id_source) {
-            if let Some(s) = self.file_list.get_mut(idx) {
-                *s = path;
-            }
-        }
     }
 
     pub fn show_with_additional(
@@ -63,5 +64,14 @@ impl<'a> MultiFileList<'a> {
 
     pub fn show(self, ui: &mut Ui) {
         self.show_maybe_additional(ui, None::<(_, fn(usize, &mut Ui))>);
+    }
+}
+
+fn maybe_extract(opt: &mut Option<(String, usize)>, idx: usize) -> Option<(String, usize)> {
+    let extract = { opt.is_some() && opt.as_ref().unwrap().1 == idx };
+    if extract {
+        opt.take()
+    } else {
+        None
     }
 }

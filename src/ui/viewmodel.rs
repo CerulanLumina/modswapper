@@ -25,7 +25,7 @@ impl NewSwapSetWindow {
         let mut v = self.inner.lock().unwrap();
         *v = NewSwapSetWindowState {
             label: String::new(),
-            source_directories: vec![String::new()],
+            source_directories: vec![Default::default()],
             uuid: Uuid::new_v4(),
         };
     }
